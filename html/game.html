@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alien Code Cracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0d1a;
+      --surface: #121629;
+      --surface2: #1a1f35;
+      --border: rgba(0,255,180,0.15);
+      --border2: rgba(0,255,180,0.35);
+      --text: #d0ffe8;
+      --text2: #7ab89a;
+      --text3: #3a5a48;
+      --accent: #00ffb4;
+      --accent-dim: rgba(0,255,180,0.12);
+      --red: #ff4a6e;
+      --amber: #ffb830;
+      --font: 'Courier New', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,180,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,180,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* Header */
+    .eyebrow {
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      opacity: 0.7;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 20px rgba(0,255,180,0.4);
+      margin-bottom: 0.25rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Difficulty selector */
+    #difficulty-section { margin-bottom: 1.5rem; }
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    #diff-btns { display: flex; gap: 8px; }
+    .diff-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 0;
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.05em;
+    }
+    .diff-btn:hover { border-color: var(--border2); color: var(--text); }
+    .diff-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Status display */
+    #status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      gap: 10px;
+    }
+    .stat-box {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .stat-box .stat-num { font-size: 22px; font-weight: 700; color: var(--accent); }
+    .stat-box .stat-lbl { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; margin-top: 2px; }
+
+    /* Range display */
+    #range-display {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.05em;
+    }
+    #range-display span { color: var(--accent); font-weight: 700; }
+
+    /* Input area */
+    #input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    #guess-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--font);
+      font-size: 18px;
+      color: var(--accent);
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #guess-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(0,255,180,0.15);
+    }
+    #guess-input::placeholder { color: var(--text3); font-size: 13px; letter-spacing: 0.05em; }
+    #guess-btn {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #guess-btn:hover:not(:disabled) { background: rgba(0,255,180,0.2); }
+    #guess-btn:active:not(:disabled) { transform: scale(0.97); }
+    #guess-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* Feedback message */
+    #feedback {
+      text-align: center;
+      font-size: 15px;
+      min-height: 24px;
+      letter-spacing: 0.03em;
+      transition: color 0.3s;
+      margin-bottom: 0.75rem;
+    }
+    #feedback.too-high { color: var(--red); }
+    #feedback.too-low { color: var(--amber); }
+    #feedback.correct { color: var(--accent); text-shadow: 0 0 12px rgba(0,255,180,0.5); }
+
+    /* Progress bar */
+    #progress-wrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    #progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.4s ease, background 0.3s;
+    }
+    #progress-label {
+      font-size: 10px;
+      color: var(--text3);
+      text-align: right;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    /* Hint button */
+    #hint-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--border2);
+      border-radius: 8px;
+      padding: 9px;
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text2);
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
+    #hint-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+    #hint-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    #hint-text {
+      font-size: 12px;
+      color: var(--amber);
+      text-align: center;
+      min-height: 18px;
+      margin-top: 8px;
+      letter-spacing: 0.03em;
+    }
+
+    /* Guess history */
+    #history-section { margin-top: 1rem; }
+    #history-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--text3);
+      margin-bottom: 8px;
+    }
+    #history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .guess-tag {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+      font-family: var(--font);
+      animation: popIn 0.2s ease;
+    }
+    @keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+    .guess-tag.high { color: var(--red); border-color: rgba(255,74,110,0.3); background: rgba(255,74,110,0.07); }
+    .guess-tag.low  { color: var(--amber); border-color: rgba(255,184,48,0.3); background: rgba(255,184,48,0.07); }
+
+    /* Win overlay */
+    #win-screen {
+      display: none;
+      text-align: center;
+      padding: 0.5rem 0;
+    }
+    #win-emoji { font-size: 48px; margin-bottom: 0.75rem; animation: bounce 0.6s ease; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-12px)} }
+    #win-title { font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; letter-spacing: 0.05em; text-shadow: 0 0 16px rgba(0,255,180,0.4); }
+    #win-msg { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; }
+    #win-score { font-size: 32px; font-weight: 700; color: var(--accent); }
+    #win-score-label { font-size: 11px; color: var(--text3); letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+    #play-again-btn {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 11px 28px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: background 0.15s;
+    }
+    #play-again-btn:hover { background: rgba(0,255,180,0.2); }
+
+    /* Shake animation */
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-6px)}
+      40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)}
+      80%{transform:translateX(4px)}
+    }
+    .shake { animation: shake 0.35s ease; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="eyebrow">▸ CLASSIFIED SYSTEM ACCESS</div>
+  <h1>CODE CRACKER</h1>
+  <p class="subtitle">Breach the alien security vault</p>
+
+  <div class="card">
+
+    <div id="difficulty-section">
+      <div class="section-label">// difficulty level</div>
+      <div id="diff-btns">
+        <button class="diff-btn" onclick="setDiff('easy')">EASY<br><span style="font-size:10px;opacity:0.6">1–50</span></button>
+        <button class="diff-btn active" onclick="setDiff('medium')">MEDIUM<br><span style="font-size:10px;opacity:0.6">1–100</span></button>
+        <button class="diff-btn" onclick="setDiff('hard')">HARD<br><span style="font-size:10px;opacity:0.6">1–200</span></button>
+        <button class="diff-btn" onclick="setDiff('extreme')">EXTREME<br><span style="font-size:10px;opacity:0.6">1–500</span></button>
+      </div>
+    </div>
+
+    <div id="status-row">
+      <div class="stat-box">
+        <div class="stat-num" id="guesses-left">10</div>
+        <div class="stat-lbl">ATTEMPTS LEFT</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="guess-count">0</div>
+        <div class="stat-lbl">GUESSES MADE</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="best-score">—</div>
+        <div class="stat-lbl">BEST SCORE</div>
+      </div>
+    </div>
+
+    <div id="range-display">
+      Target range: <span id="range-low">1</span> — <span id="range-high">100</span>
+    </div>
+
+    <div id="main-game">
+      <div id="input-row">
+        <input id="guess-input" type="number" placeholder="Enter code..." min="1" max="100" />
+        <button id="guess-btn" onclick="submitGuess()">SCAN</button>
+      </div>
+
+      <div id="feedback">// awaiting input...</div>
+
+      <div id="progress-wrap">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="progress-label">ATTEMPTS USED: 0 / 10</div>
+
+      <button id="hint-btn" onclick="useHint()">⚡ REQUEST HINT (1 use per game)</button>
+      <div id="hint-text"></div>
+
+      <div id="history-section">
+        <div id="history-label">// previous attempts</div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <div id="win-screen">
+      <div id="win-emoji">🔓</div>
+      <div id="win-title">VAULT BREACHED</div>
+      <div id="win-msg" id="win-msg"></div>
+      <div id="win-score"></div>
+      <div id="win-score-label">SCORE</div>
+      <button id="play-again-btn" onclick="newGame()">[ NEW TARGET ]</button>
+    </div>
+
+  </div>
+    <a href="../index.html" style="text-align: center;">Back To Home</a>
+</div>
+
+<script>
+const DIFFS = {
+  easy:    { max: 50,  attempts: 8  },
+  medium:  { max: 100, attempts: 10 },
+  hard:    { max: 200, attempts: 12 },
+  extreme: { max: 500, attempts: 15 }
+};
+
+let diff = 'medium';
+let secret, maxAttempts, attempts, hintUsed, gameOver, lo, hi, bestScore;
+bestScore = null;
+
+function setDiff(d) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['easy','medium','hard','extreme'][i] === d);
+  });
+  newGame();
+}
+
+function newGame() {
+  const cfg = DIFFS[diff];
+  secret = Math.floor(Math.random() * cfg.max) + 1;
+  maxAttempts = cfg.attempts;
+  attempts = 0;
+  hintUsed = false;
+  gameOver = false;
+  lo = 1;
+  hi = cfg.max;
+
+  document.getElementById('guesses-left').textContent = maxAttempts;
+  document.getElementById('guess-count').textContent = 0;
+  document.getElementById('range-low').textContent = 1;
+  document.getElementById('range-high').textContent = cfg.max;
+  document.getElementById('feedback').textContent = '// awaiting input...';
+  document.getElementById('feedback').className = '';
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-bar').style.background = 'var(--accent)';
+  document.getElementById('progress-label').textContent = `ATTEMPTS USED: 0 / ${maxAttempts}`;
+  document.getElementById('history-list').innerHTML = '';
+  document.getElementById('hint-text').textContent = '';
+  document.getElementById('hint-btn').disabled = false;
+  document.getElementById('hint-btn').textContent = '⚡ REQUEST HINT (1 use per game)';
+  document.getElementById('guess-input').value = '';
+  document.getElementById('guess-input').disabled = false;
+  document.getElementById('guess-btn').disabled = false;
+  document.getElementById('main-game').style.display = 'block';
+  document.getElementById('win-screen').style.display = 'none';
+  document.getElementById('best-score').textContent = bestScore !== null ? bestScore : '—';
+  document.getElementById('guess-input').focus();
+}
+
+function submitGuess() {
+  if (gameOver) return;
+  const input = document.getElementById('guess-input');
+  const val = parseInt(input.value);
+  const cfg = DIFFS[diff];
+
+  if (isNaN(val) || val < 1 || val > cfg.max) {
+    input.classList.add('shake');
+    setTimeout(() => input.classList.remove('shake'), 400);
+    document.getElementById('feedback').textContent = `⚠ Enter a number between 1 and ${cfg.max}`;
+    document.getElementById('feedback').className = 'too-high';
+    return;
+  }
+
+  attempts++;
+  const left = maxAttempts - attempts;
+  document.getElementById('guess-count').textContent = attempts;
+  document.getElementById('guesses-left').textContent = Math.max(0, left);
+  const pct = (attempts / maxAttempts) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  if (pct > 70) document.getElementById('progress-bar').style.background = 'var(--red)';
+  else if (pct > 40) document.getElementById('progress-bar').style.background = 'var(--amber)';
+  document.getElementById('progress-label').textContent = `ATTEMPTS USED: ${attempts} / ${maxAttempts}`;
+
+  const fb = document.getElementById('feedback');
+
+  if (val === secret) {
+    gameOver = true;
+    const score = Math.max(10, Math.round((left / maxAttempts) * 1000 - attempts * 20 + (hintUsed ? 0 : 100)));
+    if (bestScore === null || score > bestScore) bestScore = score;
+    document.getElementById('best-score').textContent = bestScore;
+    showWin(score, attempts);
+  } else if (left <= 0) {
+    gameOver = true;
+    fb.textContent = `💀 LOCKOUT — code was ${secret}`;
+    fb.className = 'too-high';
+    addTag(val, val > secret ? 'high' : 'low');
+    document.getElementById('guess-input').disabled = true;
+    document.getElementById('guess-btn').disabled = true;
+    document.getElementById('hint-btn').disabled = true;
+  } else if (val > secret) {
+    const diff_n = val - secret;
+    fb.textContent = diff_n > 50 ? '🔴 WAY TOO HIGH — massive overshoot' :
+                     diff_n > 20 ? '🔴 TOO HIGH — significant overshoot' :
+                     diff_n > 5  ? '🟠 TOO HIGH — close but above' :
+                                   '🟡 JUST ABOVE — almost there';
+    fb.className = 'too-high';
+    hi = Math.min(hi, val - 1);
+    addTag(val, 'high');
+  } else {
+    const diff_n = secret - val;
+    fb.textContent = diff_n > 50 ? '🔵 WAY TOO LOW — massive undershoot' :
+                     diff_n > 20 ? '🔵 TOO LOW — significant undershoot' :
+                     diff_n > 5  ? '🟡 TOO LOW — close but below' :
+                                   '🟢 JUST BELOW — almost there';
+    fb.className = 'too-low';
+    lo = Math.max(lo, val + 1);
+    addTag(val, 'low');
+  }
+
+  document.getElementById('range-low').textContent = lo;
+  document.getElementById('range-high').textContent = hi;
+  input.value = '';
+  input.focus();
+}
+
+function addTag(val, type) {
+  const tag = document.createElement('span');
+  tag.className = `guess-tag ${type}`;
+  tag.textContent = val + (type === 'high' ? ' ▲' : ' ▼');
+  document.getElementById('history-list').appendChild(tag);
+}
+
+function useHint() {
+  if (hintUsed || gameOver) return;
+  hintUsed = true;
+  document.getElementById('hint-btn').disabled = true;
+  document.getElementById('hint-btn').textContent = '⚡ HINT USED';
+  const mid = Math.floor((lo + hi) / 2);
+  const isAbove = secret > mid;
+  document.getElementById('hint-text').textContent =
+    `INTEL: The code is ${isAbove ? 'above' : 'below'} ${mid}`;
+}
+
+function showWin(score, guesses) {
+  document.getElementById('main-game').style.display = 'none';
+  document.getElementById('win-screen').style.display = 'block';
+  const msgs = [
+    `Cracked in ${guesses} attempt${guesses!==1?'s':''}. Flawless breach.`,
+    `${guesses} attempts. The vault never stood a chance.`,
+    `Security neutralized in ${guesses} guess${guesses!==1?'es':''}. Impressive work.`,
+    `${guesses} guesses to crack the code. Well played, agent.`
+  ];
+  document.getElementById('win-msg').textContent = msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('win-score').textContent = score;
+  document.getElementById('win-emoji').textContent = guesses <= 3 ? '🏆' : guesses <= 5 ? '🔓' : '✅';
+}
+
+document.getElementById('guess-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitGuess();
+});
+
+newGame();
+</script>
+</body>
+</html>
